@@ -6,13 +6,151 @@ local tab2 = Main:CreateTab("MAIN 2")
 
 --main 1 buttons
 tab:CreateButton("camlock",function()
-print("clicked")
+if ("Players") then
+        --If you see this scripts getting deleted :)
+        local rs = game:service('RunService')
+        local plrs = game:service('Players')
+        local plr = plrs.LocalPlayer
+        local uis = game:service("UserInputService")
+        local Camera = game:service('Workspace').CurrentCamera
+        local character = plr.Character 
+        local head = character.Head
+        local torso = character.Torso
+        _G.GG = nil 
+        isdoing = false
+        
+        
+        --FUNCTIONS
+        
+        
+        --|| Find goal and parent them to our workspace
+        local function GetGoal() 
+        for i,v in pairs(workspace:GetDescendants()) do
+        if v.Name == "Swish" then
+        v.Parent.Name = 'kkk'
+        v.Parent.Parent = workspace
+        end
+        end
+        end 
+        local function GetClosestGoal()
+        local distance,goal = 9e9, nil
+        for i,v in pairs(game:service('Workspace'):GetChildren()) do
+        if v.Name == "kkk" then
+        local magnitude = (plr.Character.Torso.Position - v.Position).Magnitude
+        if distance > magnitude then
+        distance = magnitude; goal = v
+        end
+        end
+        end
+        return goal, distance
+        end
+        --|| What's the additional vector3 value???
+        function calculateVector()
+        local goal, distance = GetClosestGoal()
+        local power = tonumber(game:GetService("Players").LocalPlayer.Power.Value)
+        local vector = nil
+        
+        if distance > 58 and distance < 62.9 then 
+        if power == 75 then
+        vector = Vector3.new(0, 0, 0)
+        end
+        elseif distance > 63 and distance < 69 then
+        if power == 80 then
+        vector = Vector3.new(0, 10, 0)
+        end
+        elseif distance > 69 and distance < 70 then
+        if power == 85 then
+        vector = Vector3.new(0, 18, 0)
+        end
+        elseif distance > 70 and distance < 71 then
+        if power == 85 then
+        vector = Vector3.new(0, 17, 0)
+        end
+        elseif distance > 71 and distance < 72.9 then
+        if power == 85 then
+        vector = Vector3.new(0, 15, 0)
+        end
+        elseif distance > 73 and distance < 77 then
+        if power == 85 then 
+        vector = Vector3.new(0, 5, 0) 
+        end
+        end
+        return vector
+        end
+        --|| CAMLOCK
+        local function initialize()
+        while wait() do 
+        if isdoing == true and character:WaitForChild("Humanoid").Jumping and torso.Velocity.Y >= 10 then 
+        local goal = GetClosestGoal()
+        local position = goal.Position 
+        local magnitude = (character.PrimaryPart.Position - goal.Position).magnitude
+        local cameraCFrame = CFrame.new(head.Position, position+ calculateVector())
+        Camera.CFrame = cameraCFrame
+        end 
+        end 
+        end
+        
+        
+        --concatenate
+        GetGoal()
+        character:WaitForChild("Humanoid").Jumping:Connect(function()
+        _G.GG = GetClosestGoal()
+        if character:FindFirstChild('Basketball') then
+        isdoing = true
+        initialize()
+        end
+        end)
+        --zvz
+        uis.InputBegan:connect(function(click)
+        if click.UserInputType == Enum.UserInputType.MouseButton1 then 
+        isdoing = false
+        end
+        end)
+        else 
+        return 
+        end
 end)
 
 
 
 tab:CreateButton("silent aim",function()
-print("clicked")
+ local Player = game:GetService("Players").LocalPlayer
+
+    if workspace:FindFirstChild("PracticeArea") then
+        workspace.PracticeArea.Parent = workspace.Courts
+    end
+    
+    local GetGoal = function()
+        local Distance, Goal = 9e9;
+        
+        for _, Obj in next, workspace.Courts:GetDescendants() do
+            if Obj.Name == "Swish" and Obj.Parent:FindFirstChildOfClass("TouchTransmitter") then
+                local Magnitude = (Player.Character.Torso.Position - Obj.Parent.Position).Magnitude
+            
+                if Distance > Magnitude then
+                    Distance = Magnitude
+                    Goal = Obj.Parent
+                end
+            end
+        end
+        
+        return Goal
+    end
+    
+    local Hook do
+        Hook = hookmetamethod(game, "__namecall", newcclosure(function(Self, ...)
+            local Arguments = {...}
+            local NCM = getnamecallmethod()
+            
+            if Self == workspace and NCM == "FindPartOnRayWithIgnoreList" and not game:IsAncestorOf(getcallingscript()) then
+                local Goal = GetGoal()
+            
+                return Goal, Goal.Position + Vector3.new(0, 45, 0)
+            end
+        
+            return Hook(Self, ...)
+        end))
+    end
 end)
 
 
