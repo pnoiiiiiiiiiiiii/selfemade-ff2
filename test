@@ -1,113 +1,90 @@
 local library = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ShaddowScripts/Main/main/Library"))()
-local Main = library:CreateWindow("Main","Crimson")
+local Main = library:CreateWindow("selfmade hoopz (beta)","Crimson")
 
 local tab = Main:CreateTab("MAIN 1")
 local tab2 = Main:CreateTab("MAIN 2")
 
 --main 1 buttons
+tab:CreateButton("camlock",function()
+print("clicked")
+end)
 
-tab:CreateToggle("camlock",function(a)
-if ("Players") then
-        --If you see this scripts getting deleted :)
-        local rs = game:service('RunService')
-        local plrs = game:service('Players')
-        local plr = plrs.LocalPlayer
-        local uis = game:service("UserInputService")
-        local Camera = game:service('Workspace').CurrentCamera
-        local character = plr.Character 
-        local head = character.Head
-        local torso = character.Torso
-        _G.GG = nil 
-        isdoing = false
-        
-        
-        --FUNCTIONS
-        
-        
-        --|| Find goal and parent them to our workspace
-        local function GetGoal() 
-        for i,v in pairs(workspace:GetDescendants()) do
-        if v.Name == "Swish" then
-        v.Parent.Name = 'kkk'
-        v.Parent.Parent = workspace
+
+
+tab:CreateButton("silent aim",function()
+print("clicked")
+end)
+
+
+tab:CreateButton("BALL MAG (getting fixed)",function()
+print("clicked")
+end)
+
+
+tab:CreateButton("BALL REACH(gtting fixed)",function()
+print("clicked")
+end)
+
+
+tab:CreateButton("anti travel",function()
+local bool = true -- Set 'bool' to 'true' to disable travel
+
+local mt = getrawmetatable(game)
+local namecall = mt.__namecall
+setreadonly(mt, false)
+mt.__namecall = function(self, ...)
+    local args = { ... }
+    local method = getnamecallmethod()
+
+    if tostring(self) == "shootingEvent" and method == "FireServer" and args[1] == "xd" then
+        if bool == false then
+            args[1] = "xd"
+            return self.FireServer(self, unpack(args))
+        elseif bool == true then
+            return
         end
+    end
+    return namecall(self, ...)
+end
+end)
+
+
+tab:CreateButton("anti fall",function()
+ _G.antiFall = true -- Set it to true to enable anti-fall by default
+
+spawn(function()
+    game:GetService("Players").LocalPlayer.Character.Humanoid:GetPropertyChangedSignal('PlatformStand'):Connect(function()
+        if game:GetService("Players").LocalPlayer.Character.Humanoid.PlatformStand == true and not _G.antiFall == true then
+            return;
         end
-        end 
-        local function GetClosestGoal()
-        local distance,goal = 9e9, nil
-        for i,v in pairs(game:service('Workspace'):GetChildren()) do
-        if v.Name == "kkk" then
-        local magnitude = (plr.Character.Torso.Position - v.Position).Magnitude
-        if distance > magnitude then
-        distance = magnitude; goal = v
+        game:GetService("Players").LocalPlayer.Character.Humanoid.PlatformStand = false
+        game:GetService("Players").LocalPlayer.Character.Humanoid.AutoRotate = true
+    end)
+end)
+
+end)
+
+tab2:CreateButton("force view stats",function()
+ local Players = game:GetService("Players")
+
+-- Function to update AllowViewCard for a specific player
+local function updateAllowViewCard(player)
+    if player:FindFirstChild("Configuration") then
+        local allowViewCard = player.Configuration:FindFirstChild("AllowViewCard")
+        if allowViewCard then
+            allowViewCard.Value = true
         end
-        end
-        end
-        return goal, distance
-        end
-        --|| What's the additional vector3 value???
-        function calculateVector()
-        local goal, distance = GetClosestGoal()
-        local power = tonumber(game:GetService("Players").LocalPlayer.Power.Value)
-        local vector = nil
-        
-        if distance > 58 and distance < 62.9 then 
-        if power == 75 then
-        vector = Vector3.new(0, 0, 0)
-        end
-        elseif distance > 63 and distance < 69 then
-        if power == 80 then
-        vector = Vector3.new(0, 10, 0)
-        end
-        elseif distance > 69 and distance < 70 then
-        if power == 85 then
-        vector = Vector3.new(0, 18, 0)
-        end
-        elseif distance > 70 and distance < 71 then
-        if power == 85 then
-        vector = Vector3.new(0, 17, 0)
-        end
-        elseif distance > 71 and distance < 72.9 then
-        if power == 85 then
-        vector = Vector3.new(0, 15, 0)
-        end
-        elseif distance > 73 and distance < 77 then
-        if power == 85 then 
-        vector = Vector3.new(0, 5, 0) 
-        end
-        end
-        return vector
-        end
-        --|| CAMLOCK
-        local function initialize()
-        while wait() do 
-        if isdoing == true and character:WaitForChild("Humanoid").Jumping and torso.Velocity.Y >= 10 then 
-        local goal = GetClosestGoal()
-        local position = goal.Position 
-        local magnitude = (character.PrimaryPart.Position - goal.Position).magnitude
-        local cameraCFrame = CFrame.new(head.Position, position+ calculateVector())
-        Camera.CFrame = cameraCFrame
-        end 
-        end 
-        end
-        
-        
-        --concatenate
-        GetGoal()
-        character:WaitForChild("Humanoid").Jumping:Connect(function()
-        _G.GG = GetClosestGoal()
-        if character:FindFirstChild('Basketball') then
-        isdoing = true
-        initialize()
-        end
-        end)
-        --zvz
-        uis.InputBegan:connect(function(click)
-        if click.UserInputType == Enum.UserInputType.MouseButton1 then 
-        isdoing = false
-        end
-        end)
-        else 
-        return 
-        end
+    end
+end
+
+-- Continuously update AllowViewCard for all players, including new ones
+while true do
+    local allPlayers = Players:GetPlayers()
+    for _, player in pairs(allPlayers) do
+        updateAllowViewCard(player)
+    end
+
+    -- Wait for a short period to avoid excessive updates
+    wait(5)  -- Adjust the wait time as needed
+end
 end)
