@@ -1,228 +1,159 @@
-local library = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ShaddowScripts/Main/main/Library"))()
-local Main = library:CreateWindow("selfmade hoopz (beta)","Crimson")
+--// Services
+local ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
 
-local tab = Main:CreateTab("MAIN 1")
-local tab2 = Main:CreateTab("MAIN 2")
+--// Variables
+local MAX_EXECUTION_TIME = 10
+local RETRY_INTERVAL = 0.4
+local MAX_RETRIES = 10
+local Hooks = {}
+local HANDSHAKE_ARGS = nil
+local SHUFFLE_FUNCTION = nil
+local AC_STRING = nil
+local Remote = ReplicatedStorage:WaitForChild("Remotes").CharacterSoundEvent
 
---main 1 buttons
-tab:CreateButton("camlock",function()
-if ("Players") then
-        --If you see this scripts getting deleted :)
-        local rs = game:service('RunService')
-        local plrs = game:service('Players')
-        local plr = plrs.LocalPlayer
-        local uis = game:service("UserInputService")
-        local Camera = game:service('Workspace').CurrentCamera
-        local character = plr.Character 
-        local head = character.Head
-        local torso = character.Torso
-        _G.GG = nil 
-        isdoing = false
-        
-        
-        --FUNCTIONS
-        
-        
-        --|| Find goal and parent them to our workspace
-        local function GetGoal() 
-        for i,v in pairs(workspace:GetDescendants()) do
-        if v.Name == "Swish" then
-        v.Parent.Name = 'kkk'
-        v.Parent.Parent = workspace
+--// Functions
+local function IsHandshakeArgs(Args)
+    return (rawequal(Args[1], "\65\67\240\159\148\177")
+    and rawequal(type(Args[2]), "table")
+    and rawequal(rawlen(Args[2]), 19))
+end
+
+--> Retrieve Handshake Args
+Hooks.Namecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+    local Method = getnamecallmethod()
+    local Args = {...}
+
+    if
+        not checkcaller()
+        and rawequal(self, Remote)
+        and rawequal(Method, "fireServer")
+        and IsHandshakeArgs(Args)
+    then
+        if not HANDSHAKE_ARGS and not AC_STRING then
+            HANDSHAKE_ARGS = Args[2]
+            AC_STRING = Args[1]
+        else
+            return coroutine.yield()
         end
+    end
+
+    return Hooks.Namecall(self, ...)
+end))
+
+--> Wait for HANDSHAKE_ARGS
+while not HANDSHAKE_ARGS do
+    task.wait()
+end
+
+--> Delay
+task.wait(1)
+
+--> Shuffle Function Grabber
+for Index, Function in pairs(getgc()) do
+    if type(Function) == 'function' and debug.getinfo(Function).source:find("PlayerModule.LocalScript") then
+        if debug.getinfo(Function).numparams == 6 then
+            if not SHUFFLE_FUNCTION then
+                SHUFFLE_FUNCTION = Function
+            end
         end
-        end 
-        local function GetClosestGoal()
-        local distance,goal = 9e9, nil
-        for i,v in pairs(game:service('Workspace'):GetChildren()) do
-        if v.Name == "kkk" then
-        local magnitude = (plr.Character.Torso.Position - v.Position).Magnitude
-        if distance > magnitude then
-        distance = magnitude; goal = v
+    end
+end
+
+local shit = function()
+   return Remote:fireServer(AC_STRING, HANDSHAKE_ARGS, nil)
+end
+
+--> Replicate Handshake
+task.spawn(function()
+    local RETRIES = 0
+    local TIME = os.clock()
+
+    while RETRIES < MAX_RETRIES do
+        local Success, Error = pcall(shit)
+
+        if Success then
+            RETRIES = 0
+        else
+            RETRIES = RETRIES + 1
+            warn("Bypass timed out.")
         end
-        end
-        end
-        return goal, distance
-        end
-        --|| What's the additional vector3 value???
-        function calculateVector()
-        local goal, distance = GetClosestGoal()
-        local power = tonumber(game:GetService("Players").LocalPlayer.Power.Value)
-        local vector = nil
-        
-        if distance > 58 and distance < 62.9 then 
-        if power == 75 then
-        vector = Vector3.new(0, 0, 0)
-        end
-        elseif distance > 63 and distance < 69 then
-        if power == 80 then
-        vector = Vector3.new(0, 10, 0)
-        end
-        elseif distance > 69 and distance < 70 then
-        if power == 85 then
-        vector = Vector3.new(0, 18, 0)
-        end
-        elseif distance > 70 and distance < 71 then
-        if power == 85 then
-        vector = Vector3.new(0, 17, 0)
-        end
-        elseif distance > 71 and distance < 72.9 then
-        if power == 85 then
-        vector = Vector3.new(0, 15, 0)
-        end
-        elseif distance > 73 and distance < 77 then
-        if power == 85 then 
-        vector = Vector3.new(0, 5, 0) 
-        end
-        end
-        return vector
-        end
-        --|| CAMLOCK
-        local function initialize()
-        while wait() do 
-        if isdoing == true and character:WaitForChild("Humanoid").Jumping and torso.Velocity.Y >= 10 then 
-        local goal = GetClosestGoal()
-        local position = goal.Position 
-        local magnitude = (character.PrimaryPart.Position - goal.Position).magnitude
-        local cameraCFrame = CFrame.new(head.Position, position+ calculateVector())
-        Camera.CFrame = cameraCFrame
-        end 
-        end 
-        end
-        
-        
-        --concatenate
-        GetGoal()
-        character:WaitForChild("Humanoid").Jumping:Connect(function()
-        _G.GG = GetClosestGoal()
-        if character:FindFirstChild('Basketball') then
-        isdoing = true
-        initialize()
-        end
-        end)
-        --zvz
-        uis.InputBegan:connect(function(click)
-        if click.UserInputType == Enum.UserInputType.MouseButton1 then 
-        isdoing = false
-        end
-        end)
-        else 
-        return 
-        end
+
+        task.wait(RETRY_INTERVAL)
+    end
+
+    warn("Bypass timed out.")
 end)
 
-
-
-tab:CreateButton("silent aim",function()
- local Player = game:GetService("Players").LocalPlayer
-
-    if workspace:FindFirstChild("PracticeArea") then
-        workspace.PracticeArea.Parent = workspace.Courts
-    end
-    
-    local GetGoal = function()
-        local Distance, Goal = 9e9;
-        
-        for _, Obj in next, workspace.Courts:GetDescendants() do
-            if Obj.Name == "Swish" and Obj.Parent:FindFirstChildOfClass("TouchTransmitter") then
-                local Magnitude = (Player.Character.Torso.Position - Obj.Parent.Position).Magnitude
-            
-                if Distance > Magnitude then
-                    Distance = Magnitude
-                    Goal = Obj.Parent
+--> Lag Bypass
+task.spawn(function()
+    for Index, Value in getgc() do
+        if type(Value) == 'function' and getinfo(Value).source:find("PlayerModule.LocalScript") then
+            for Index2, Value2 in getconstants(Value) do
+                if Value2 == 4000001 then
+                    setconstant(Value, Index2, 1)
+                end
+                
+                if Value2 == 20.03 then
+                    setconstant(Value, Index2, 100)
+                    --warn("Spoofed.")
+                end
+                
+                if Value2 == 50.03 then
+                    setconstant(Value, Index2, 100)
+                    --warn("Spoofed.")
                 end
             end
         end
-        
-        return Goal
     end
-    
-    local Hook do
-        Hook = hookmetamethod(game, "__namecall", newcclosure(function(Self, ...)
-            local Arguments = {...}
-            local NCM = getnamecallmethod()
-            
-            if Self == workspace and NCM == "FindPartOnRayWithIgnoreList" and not game:IsAncestorOf(getcallingscript()) then
-                local Goal = GetGoal()
-            
-                return Goal, Goal.Position + Vector3.new(0, 45, 0)
+end)
+
+local old = nil;
+old = hookfunction(getrenv().delay, function(...)
+    local time = select(1, ...)
+    if time == 0.4 then
+        local crashfunc = select(2, ...)
+        if type(crashfunc) == "function" then
+            if (#debug.getupvalues(crashfunc) == 2) and (string.len(debug.info(crashfunc, "n")) == 0) then
+                return wait(9e9)
             end
-        
-            return Hook(Self, ...)
-        end))
+        end
     end
+    return old(...)
 end)
 
-
-tab:CreateButton("BALL MAG (getting fixed)",function()
-print("clicked")
-end)
-
-
-tab:CreateButton("BALL REACH(gtting fixed)",function()
-print("clicked")
-end)
-
-
-tab:CreateButton("anti travel",function()
-local bool = true -- Set 'bool' to 'true' to disable travel
-
-local mt = getrawmetatable(game)
-local namecall = mt.__namecall
-setreadonly(mt, false)
-mt.__namecall = function(self, ...)
-    local args = { ... }
-    local method = getnamecallmethod()
-
-    if tostring(self) == "shootingEvent" and method == "FireServer" and args[1] == "xd" then
-        if bool == false then
-            args[1] = "xd"
-            return self.FireServer(self, unpack(args))
-        elseif bool == true then
+-- > Hook the SHUFFLE_FUNCTION
+if SHUFFLE_FUNCTION then
+    local Old
+    Old = hookfunction(SHUFFLE_FUNCTION, function(p1, p2, p3, p4, p5, p6)
+        if rawequal(p2, 668) and rawequal(p3, 670) and rawequal(p4, 751) and rawequal(p5, 671) and rawequal(p6, 791) then
+            return
+        elseif rawequal(p2, 686) and rawequal(p3, 788) and rawequal(p4, 811) and rawequal(p5, 880) and rawequal(p6, 785) then
+            return
+        elseif rawequal(p2, 859) and rawequal(p3, 775) and rawequal(p4, 751) and rawequal(p5, 671) and rawequal(p6, 664) then
+            return
+        elseif rawequal(p2, 764) and rawequal(p3, 699) and rawequal(p4, 751) and rawequal(p5, 671) and rawequal(p6, 774) then
+            return
+        elseif rawequal(p2, 811) and rawequal(p3, 777) and rawequal(p4, 751) and rawequal(p5, 690) and rawequal(p6, 784) then
+            return
+        elseif rawequal(p2, 898) and rawequal(p3, 892) and rawequal(p4, 811) and rawequal(p5, 671) and rawequal(p6, 781) then
+            return
+        elseif rawequal(p2, 887) and rawequal(p3, 782) and rawequal(p4, 780) and rawequal(p5, 648) and rawequal(p6, 659) then
             return
         end
-    end
-    return namecall(self, ...)
-end
-end)
 
-
-tab:CreateButton("anti fall",function()
- _G.antiFall = true -- Set it to true to enable anti-fall by default
-
-spawn(function()
-    game:GetService("Players").LocalPlayer.Character.Humanoid:GetPropertyChangedSignal('PlatformStand'):Connect(function()
-        if game:GetService("Players").LocalPlayer.Character.Humanoid.PlatformStand == true and not _G.antiFall == true then
-            return;
-        end
-        game:GetService("Players").LocalPlayer.Character.Humanoid.PlatformStand = false
-        game:GetService("Players").LocalPlayer.Character.Humanoid.AutoRotate = true
+        return Old(p1, p2, p3, p4, p5, p6)
     end)
-end)
+else
+    warn("Bypass timed out.")
+end
 
-end)
+task.wait(1.2)
 
-tab2:CreateButton("force view stats",function()
- local Players = game:GetService("Players")
-
--- Function to update AllowViewCard for a specific player
-local function updateAllowViewCard(player)
-    if player:FindFirstChild("Configuration") then
-        local allowViewCard = player.Configuration:FindFirstChild("AllowViewCard")
-        if allowViewCard then
-            allowViewCard.Value = true
+--> Hook AC Script
+for INDEX, VALUE in pairs(getgc()) do
+    if type(VALUE) == "function" then
+        if getinfo(VALUE).source:find("PlayerModule.LocalScript") then
+            hookfunction(VALUE, function() end)
         end
     end
 end
-
--- Continuously update AllowViewCard for all players, including new ones
-while true do
-    local allPlayers = Players:GetPlayers()
-    for _, player in pairs(allPlayers) do
-        updateAllowViewCard(player)
-    end
-
-    -- Wait for a short period to avoid excessive updates
-    wait(5)  -- Adjust the wait time as needed
-end
-end)
